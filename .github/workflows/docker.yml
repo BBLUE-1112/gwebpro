@@ -48,7 +48,7 @@ jobs:
         with:
           context: . # Build context is current directory
           push: true # Push image after building
-          tags: bblue96/gwebpro-test:latest # Tag used for Docker image
+          tags: bblue96/gwebpro-local:test # Tag used for Docker image
 
       # Step 7: Clean up local Docker environment on runner (optional)
       - name: Clean up
@@ -72,14 +72,14 @@ jobs:
 
           script: |
             # Pull the latest image from Docker Hub
-            docker pull bblue96/gwebpro-test:latest
+            docker pull bblue96/gwebpro-local:test
 
             # Stop and remove any existing container named 'gwebpro-nextjs-app'
-            docker stop gwebpro-nextjs-app || true
-            docker rm gwebpro-nextjs-app || true
+            docker stop gwebpro-nextjs-test || true
+            docker rm gwebpro-nextjs-test || true
 
-            # Run the container with the pulled image and expose port 3002
+            # Run the container with the pulled image and expose port 3004
             docker run -d \
-              --name gwebpro-nextjs-app \
-              -p 3002:3000 \
-              bblue96/gwebpro-test:latest
+              --name gwebpro-nextjs-test \
+              -p 3004:3000 \
+              bblue96/gwebpro-local:test
