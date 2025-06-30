@@ -74,7 +74,7 @@ jobs:
             # Pull the latest image from Docker Hub
             docker pull bblue96/gwebpro-local:test
 
-            # Stop and remove any existing container named 'gwebpro-nextjs-app'
+            # Stop and remove any existing container named 'gwebpro-nextjs-test'
             docker stop gwebpro-nextjs-test || true
             docker rm gwebpro-nextjs-test || true
 
