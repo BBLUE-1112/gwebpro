@@ -1,0 +1,85 @@
+# This workflow handles CI/CD for a Node.js app using Docker and GitHub Actions.
+# It builds a Docker image and pushes it to Docker Hub, then deploys to a remote server via SSH.
+
+name: CI/CD - Build and Deploy to DockerHub
+
+# Trigger the workflow only when code is pushed to the 'main' branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # -------------------------------
+  # 1️⃣ BUILD JOB
+  # -------------------------------
+  build:
+    runs-on: ubuntu-latest # Run this job on the latest Ubuntu environment
+
+    steps:
+      # Step 1: Checkout the code from the GitHub repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Node.js version 18
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      # Step 3: Install npm dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Step 4: Build the production-ready version of the app
+      - name: Build the app
+        run: npm run build
+
+      # Step 5: Authenticate to Docker Hub using GitHub Secrets
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }} # Docker Hub username
+          password: ${{ secrets.DOCKERHUB_TOKEN }} # Docker Hub access token
+
+      # Step 6: Build the Docker image and push it to Docker Hub
+      - name: Build and Push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: . # Build context is current directory
+          push: true # Push image after building
+          tags: bblue96/gwebpro-test:latest # Tag used for Docker image
+
+      # Step 7: Clean up local Docker environment on runner (optional)
+      - name: Clean up
+        run: docker system prune -f
+
+  # -------------------------------
+  # 2️⃣ DEPLOY JOB
+  # -------------------------------
+  deploy:
+    needs: build # This job runs only after 'build' job completes successfully
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Connect to your server using SSH and deploy the latest Docker image
+      - name: Deploy to Droplet via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 167.71.231.165 # IP address of your DigitalOcean droplet
+          username: root # Username to SSH as (root)
+          key: ${{ secrets.SERVER_SSH_KEY }} # SSH private key (add to GitHub secrets)
+
+          script: |
+            # Pull the latest image from Docker Hub
+            docker pull bblue96/gwebpro-test:latest
+
+            # Stop and remove any existing container named 'gwebpro-nextjs-app'
+            docker stop gwebpro-nextjs-app || true
+            docker rm gwebpro-nextjs-app || true
+
+            # Run the container with the pulled image and expose port 3002
+            docker run -d \
+              --name gwebpro-nextjs-app \
+              -p 3002:3000 \
+              bblue96/gwebpro-test:latest
