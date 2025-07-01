@@ -1,5 +1,5 @@
 import axios from 'axios';
-const API_BASE_URL = 'https://netfirst.ca/gwebpro_new/wp-json/';
+const API_BASE_URL = 'http://167.71.231.165:8000/wp-json/';
 
 
 const apiService = {
